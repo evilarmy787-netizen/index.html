@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>My Contact Notes — Home</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <style>
+    /* basic styling */
+    *{box-sizing:border-box}
+    body{margin:0;font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial; background:#f5f5f5;color:#222;}
+    .app{max-width:600px;margin:0 auto;padding:14px}
+    header{display:flex;align-items:center;justify-content:space-between}
+    h1{font-size:20px;margin:8px 0}
+    /* form */
+    .card{background:#fff;padding:12px;border-radius:12px;box-shadow:0 4px 12px rgba(0,0,0,0.06);margin-bottom:12px}
+    label{font-size:13px;color:#555}
+    input,select{width:100%;padding:8px;border-radius:8px;border:1px solid #dcdcdc;margin-top:6px;margin-bottom:10px}
+    .row{display:flex;gap:8px}
+    .row > *{flex:1}
+    .btn{background:#007bff;color:#fff;padding:10px 14px;border:none;border-radius:999px;cursor:pointer}
+    /* entries */
+    .entries{display:flex;flex-direction:column;gap:8px}
+    .entry{background:#fff;padding:10px;border-radius:10px;position:relative;box-shadow:0 2px 8px rgba(0,0,0,0.06)}
+    .entry strong{display:block;font-size:15px}
+    .entry-meta{font-size:12px;color:#666;margin-top:6px}
+    .actions{position:absolute;right:10px;top:10px;display:flex;gap:6px}
+    .small{padding:6px 8px;border-radius:999px;border:none;cursor:pointer}
+    .delete{background:#f56565;color:#fff}
+    .call{background:#34d399;color:#fff}
+    .empty{text-align:center;color:#777;padding:12px}
+    /* bottom nav */
+    .bottom-nav{position:fixed;left:0;right:0;bottom:0;display:flex;justify-content:center;padding:10px;background:transparent;pointer-events:none}
+    .nav-bar{width:100%;max-width:600px;background:#fff;border-radius:18px;padding:8px 14px;display:flex;justify-content:space-between;align-items:center;box-shadow:0 10px 30px rgba(0,0,0,0.12);pointer-events:auto}
+    .nav-item{display:flex;flex-direction:column;align-items:center;color:#444;text-decoration:none;font-size:12px;padding:6px 10px;border-radius:10px}
+    .nav-item.active{color:#0066ff}
+    /* floating add */
+    .fab{position:fixed;right:22px;bottom:78px;width:64px;height:64px;border-radius:50%;background:#ff6fa0;display:flex;align-items:center;justify-content:center;color:#fff;font-size:32px;box-shadow:0 10px 24px rgba(0,0,0,0.25);z-index:40;border:none;cursor:pointer}
+    /* modal */
+    .modal-back{position:fixed;inset:0;background:rgba(0,0,0,0.4);display:none;align-items:center;justify-content:center;z-index:60}
+    .modal{width:92%;max-width:420px;background:#fff;border-radius:12px;padding:14px}
+    .modal h3{margin:0 0 6px 0}
+    .close{background:#eee;border-radius:8px;padding:6px 8px;border:none;cursor:pointer}
+    /* small helper */
+    .muted{font-size:12px;color:#666}
+    @media (min-width:700px){body{background:#eef2ff}}
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header>
+      <h1>My Contact Notes</h1>
+      <a href="profile.html" style="text-decoration:none;color:#007bff;font-weight:600">Profile</a>
+    </header>
+
+    <div class="card" id="addCard">
+      <label for="phone">Phone Number *</label>
+      <input id="phone" type="tel" placeholder="e.g. 9876543210" />
+
+      <label for="personName">Person Name (optional)</label>
+      <input id="personName" type="text" placeholder="e.g. John" />
+
+      <label for="location">Location Name *</label>
+      <input id="location" type="text" placeholder="e.g. Cafe near park" />
+
+      <div class="row">
+        <div>
+          <label for="date">Date *</label>
+          <input id="date" type="date" />
+        </div>
+        <div>
+          <label for="personNumber">Person Number (optional)</label>
+          <input id="personNumber" type="number" min="1" placeholder="e.g. 2" />
+        </div>
+      </div>
+
+      <div style="display:flex;gap:8px">
+        <button id="saveBtn" class="btn">Save</button>
+        <button id="clearBtn" class="btn" style="background:#e53e3e">Clear All</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+        <strong>Saved Entries</strong>
+        <input id="search" type="text" placeholder="Search phone/name/location..." style="width:55%;padding:8px;border-radius:8px;border:1px solid #ddd" />
+      </div>
+
+      <div id="entries" class="entries"></div>
+      <div id="emptyMsg" class="empty" style="display:none">No entries yet. Add one above 👆</div>
+    </div>
+  </div>
+
+  <!-- floating add button -->
+  <button class="fab" id="openAdd">+</button>
+
+  <!-- modal for add (same form as top, but just to show example) -->
+  <div id="modalBack" class="modal-back">
+    <div class="modal">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+        <h3>Add Contact</h3>
+        <button class="close" id="modalClose">X</button>
+      </div>
+
+      <label>Phone*</label>
+      <input id="m_phone" type="tel" />
+      <label>Person Name</label>
+      <input id="m_personName" type="text" />
+      <label>Location*</label>
+      <input id="m_location" type="text" />
+      <div style="display:flex;gap:8px;margin-top:8px">
+        <button id="m_save" class="btn">Save</button>
+        <button id="m_cancel" class="close">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- bottom nav -->
+  <div class="bottom-nav">
+    <div class="nav-bar">
+      <a href="index.html" class="nav-item active" id="navHome">
+        <div style="font-size:18px">🏠</div><div>Home</div>
+      </a>
+      <a href="profile.html" class="nav-item" id="navProfile">
+        <div style="font-size:18px">👤</div><div>Profile</div>
+      </a>
+    </div>
+  </div>
+
+  <script>
+    // STORAGE KEY
+    const STORAGE_KEY = "my_contact_notes_entries_v2";
+
+    // inputs (main)
+    const phoneInput = document.getElementById("phone");
+    const locationInput = document.getElementById("location");
+    const dateInput = document.getElementById("date");
+    const personNumberInput = document.getElementById("personNumber");
+    const personNameInput = document.getElementById("personName");
+    const entriesDiv = document.getElementById("entries");
+    const emptyMsg = document.getElementById("emptyMsg");
+    const clearBtn = document.getElementById("clearBtn");
+    const searchInput = document.getElementById("search");
+    const saveBtn = document.getElementById("saveBtn");
+
+    // modal inputs
+    const modalBack = document.getElementById("modalBack");
+    const openAdd = document.getElementById("openAdd");
+    const modalClose = document.getElementById("modalClose");
+    const m_phone = document.getElementById("m_phone");
+    const m_personName = document.getElementById("m_personName");
+    const m_location = document.getElementById("m_location");
+    const m_save = document.getElementById("m_save");
+    const m_cancel = document.getElementById("m_cancel");
+
+    // default date
+    (function setToday(){ const t = new Date().toISOString().split("T")[0]; dateInput.value = t; })();
+
+    function loadEntries(){
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if(!raw) return [];
+      try{ return JSON.parse(raw) }catch(e){return []}
+    }
+    function saveEntries(list){ localStorage.setItem(STORAGE_KEY, JSON.stringify(list)); }
+
+    function renderEntries(){
+      const q = (searchInput.value||"").trim().toLowerCase();
+      let list = loadEntries();
+      if(q){
+        list = list.filter(e=>{
+          return (e.phone||"").toLowerCase().includes(q) ||
+                 (e.location||"").toLowerCase().includes(q) ||
+                 (e.personName||"").toLowerCase().includes(q) ||
+                 (String(e.personNumber||"")).toLowerCase().includes(q);
+        });
+      }
+      entriesDiv.innerHTML = "";
+      if(!list.length){ emptyMsg.style.display="block"; return; } else emptyMsg.style.display="none";
+
+      list.slice().reverse().forEach(entry=>{
+        const div = document.createElement("div");
+        div.className = "entry";
+        div.innerHTML = `
+          <strong>${entry.personName ? entry.personName : entry.phone}</strong>
+          <div class="muted">${entry.phone} • ${entry.location}</div>
+          <div class="entry-meta">Date: ${entry.date} • Persons: ${entry.personNumber || "-"}</div>
+        `;
+        const actions = document.createElement("div"); actions.className="actions";
+
+        const callBtn = document.createElement("button"); callBtn.className="small call"; callBtn.textContent="Call";
+        callBtn.addEventListener("click", ()=>{ window.location.href = "tel:" + entry.phone; });
+        const delBtn = document.createElement("button"); delBtn.className="small delete"; delBtn.textContent="Delete";
+        delBtn.addEventListener("click", ()=>{
+          let cur = loadEntries();
+          const idx = cur.findIndex(e=>e.createdAt === entry.createdAt);
+          if(idx>-1){ cur.splice(idx,1); saveEntries(cur); renderEntries(); }
+        });
+        actions.appendChild(callBtn); actions.appendChild(delBtn);
+        div.appendChild(actions);
+        entriesDiv.appendChild(div);
+      });
+    }
+
+    // Save from main form
+    saveBtn.addEventListener("click", ()=>{
+      const phone = phoneInput.value.trim();
+      const location = locationInput.value.trim();
+      const date = dateInput.value;
+      const pnum = personNumberInput.value.trim();
+      const pname = personNameInput.value.trim();
+      if(!phone || !location || !date){ alert("Phone, location and date required."); return; }
+      const newEntry = { phone, location, date, personNumber: pnum||null, personName: pname||null, createdAt: new Date().toISOString() };
+      const arr = loadEntries(); arr.push(newEntry); saveEntries(arr); renderEntries();
+      // clear optional
+      personNumberInput.value = ""; personNameInput.value = "";
+    });
+
+    // clear all
+    clearBtn.addEventListener("click", ()=>{ if(confirm("Delete all entries?")){ localStorage.removeItem(STORAGE_KEY); renderEntries(); } });
+
+    // search live
+    searchInput.addEventListener("input", renderEntries);
+
+    // modal open/close & modal save
+    openAdd.addEventListener("click", ()=>{ modalBack.style.display = "flex"; });
+    modalClose.addEventListener("click", ()=>{ modalBack.style.display = "none"; });
+    m_cancel.addEventListener("click", ()=>{ modalBack.style.display = "none"; });
+    m_save.addEventListener("click", ()=>{
+      const phone = m_phone.value.trim(); const loc = m_location.value.trim(); const pname = m_personName.value.trim();
+      if(!phone||!loc){ alert("Phone and Location required"); return; }
+      const newEntry = { phone, location: loc, date: new Date().toISOString().split("T")[0], personNumber: null, personName: pname||null, createdAt: new Date().toISOString() };
+      const arr = loadEntries(); arr.push(newEntry); saveEntries(arr); renderEntries();
+      // clear & close
+      m_phone.value=""; m_personName.value=""; m_location.value=""; modalBack.style.display="none";
+    });
+
+    // initial render
+    renderEntries();
+  </script>
+</body>
+</html>
